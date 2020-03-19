@@ -1,9 +1,16 @@
 # Notes
+# Set Python interpreter (hint: use the virtualenv)
+# Open the Command Palette again (Command/Ctrl + Shift + P) and look for Python: Select Interpreter.
+
+
 # https://stackoverflow.com/questions/10333814/tell-pip-to-install-the-dependencies-of-packages-listed-in-a-requirement-file
  
 # Create virtualenv
-py -3 -m venv .venv
+py -3 -m venv venv
+
+# Download requirements
+pip3 install -r requirements.txt
 
 # Activate
-.venv/Scripts/activate
+venv/Scripts/activate
 
