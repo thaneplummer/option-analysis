@@ -5,7 +5,7 @@ so it may be slightly different than an actual trade price.
 
 ## How to Install
 
-__Windows 10__: Copy the `options.exe` executable program from the `dist` folder.
+__Windows 10__: Copy the `options.exe` executable program from the `dist` folder. When Windows warns you that the program might be dangerous, select "Run anyway."
 
 __Macintosh OS X__: (TBD)
 
@@ -17,4 +17,4 @@ as well as the Profit points and First Strike price and increment.
 
 Then click the refresh button to get the six (6) options analyzed.
 
-![](2020-03-19-17-47-08.png)
+<img src="2020-03-19-17-47-08.png" alt="Screenshot" width="500"/>
