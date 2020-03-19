@@ -1,5 +1,9 @@
+# Notes
+# https://stackoverflow.com/questions/10333814/tell-pip-to-install-the-dependencies-of-packages-listed-in-a-requirement-file
+ 
+# Create virtualenv
+py -3 -m venv .venv
 
-https://stackoverflow.com/questions/10333814/tell-pip-to-install-the-dependencies-of-packages-listed-in-a-requirement-file
-
-venv/Scripts/activate
+# Activate
+.venv/Scripts/activate
 
