@@ -20,12 +20,16 @@ sg.ChangeLookAndFeel('BlueMono') # 'BluePurple', 'DarkAmber','GreenTan'
 
 
 size_1 = (10,1)
+font_h14 = "Helvetica 14"
+font_h14b = "Helvetica 14 bold"
 def makeHeader(headings):
     header = []
     for heading in headings:
-        header.append(sg.Text(heading, 
-                    text_color='white', 
-                    background_color='darkblue', 
+        header.append(sg.Input(heading, 
+                    disabled=True,
+                    font=font_h14b,
+                    #text_color='white', 
+                    #background_color='darkblue', 
                     size=size_1, 
                     justification='center')      
         )
@@ -34,15 +38,15 @@ def makeHeader(headings):
 
 def textElement(keyval, text='00.0', isInput=True):
     if isInput:
-        return sg.Input(text, key=keyval, text_color='black', size=size_1)
+        return sg.Input(text, key=keyval, text_color='black', font=font_h14, size=size_1)
         #return sg.Input(text=text, key=keyval, text_color='black', background_color='lightblue', size=size_1)
-    return sg.Text(text=text, key=keyval, text_color='black', size=size_1)
+    return sg.Input(text=text, key=keyval, text_color='black', font=font_h14, size=size_1, disabled=True)
     #return sg.Text(text=text, key=keyval, text_color='black', background_color='lightblue', size=size_1)
 
 
 # Column layout
 head = makeHeader(['Strike','Premium','Target 1', 'Gain 1', 'Target 2', 'Gain 2'])
-column = [head,
+column = [head, 
         [textElement('r1c1'), textElement('r1c2'), textElement('r1c3'), textElement('r1c4'), textElement('r1c5'), textElement('r1c6')],
         [textElement('r2c1'), textElement('r2c2'), textElement('r2c3'), textElement('r2c4'), textElement('r2c5'), textElement('r2c6')],
         [textElement('r3c1'), textElement('r3c2'), textElement('r3c3'), textElement('r3c4'), textElement('r3c5'), textElement('r3c6')],
@@ -55,26 +59,26 @@ column = [head,
 # Window layout
 layout = [      
     [sg.Text('Option Analyser', size=(30, 1), font=("Helvetica", 25))],      
-    [sg.Text('Symbol\t'), sg.Input('AAPL', size=(10, 1), key='__symbol',tooltip='Enter the underlying stock symbol'),      
-        sg.Checkbox('Get option chain', key='__chain', default=True),
-        sg.Radio('Calls', "CALL", key='__is_call', default=True, size=(5,1)), sg.Radio('Puts', "CALL")],
+    [sg.Text('Symbol\t', font=font_h14), sg.Input('AAPL', size=(10, 1), key='__symbol',tooltip='Enter the underlying stock symbol', font=font_h14),      
+        sg.Checkbox('Get option chain', key='__chain', default=True, font=font_h14),
+        sg.Radio('Calls', "CALL", key='__is_call', default=True, size=(5,1), font=font_h14), sg.Radio('Puts', "CALL", font=font_h14)],
     #[sg.Radio(text, 1) for text in ('Call','Put')],
-    [sg.Text('Price\t'), sg.Input(key='__price', size=(10, 1)),
-        sg.Text('Expires\t'), sg.Input(key='__expdate', size=(10, 1)), sg.CalendarButton('Set date',target=(2,3),format='%Y-%m-%d')],
-    [sg.Text('_'  * 80)],      
-    [sg.Text('Target 1\t'), sg.Input(key='__target1', size=(10, 1)),
-        sg.Text('Target 2\t'), sg.Input(key='__target2', size=(10, 1))],
-    [sg.Text('Strike #1\t'), sg.Input(key='__strike_price', size=(10, 1)),
-        sg.Text('Strike inc\t'), sg.Input(key='__strike_price_inc', size=(10, 1))],
+    [sg.Text('Price\t', font=font_h14), sg.Input(key='__price', size=(10, 1), font=font_h14),
+        sg.Text('Expires\t', font=font_h14), sg.Input(key='__expdate', size=(10, 1), font=font_h14), sg.CalendarButton('Set date',target=(2,3),format='%Y-%m-%d', font=font_h14)],
+    [sg.Text('_'  * 80, font=font_h14)],      
+    [sg.Text('Target 1\t', font=font_h14), sg.Input(key='__target1', size=(10, 1), font=font_h14),
+        sg.Text('Target 2\t', font=font_h14), sg.Input(key='__target2', size=(10, 1), font=font_h14)],
+    [sg.Text('Strike #1\t', font=font_h14), sg.Input(key='__strike_price', size=(10, 1), font=font_h14),
+        sg.Text('Strike inc\t', font=font_h14), sg.Input(key='__strike_price_inc', size=(10, 1), font=font_h14)],
     #[sg.Text('Put strike\t'), sg.Input(key='__put_strike', size=(10, 1)),
     #    sg.Text('Put decrement\t'), sg.Input(key='__put_strike_dec', size=(10, 1))],
-    [sg.Text(' '  * 80)],
+    [sg.Text(' '  * 80, font=font_h14)],
     [sg.Column(column, background_color='darkblue')], #'#d3dfda')],      
-    [sg.Text(' '  * 80)],
+    [sg.Text(' '  * 80, font=font_h14)],
     #[sg.Text('Choose a folder', size=(35, 1))],      
     #[sg.Text('Your folder', size=(15, 1), auto_size_text=False, justification='right'),      
     # sg.Input('Default folder'), sg.FolderBrowse()],      
-    [sg.Submit('Lookup'), sg.Cancel('Recalc')]      
+    [sg.Submit('Lookup', font=font_h14), sg.Cancel('Recalc', font=font_h14)]      
 ]
 
 
