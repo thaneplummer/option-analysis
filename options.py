@@ -8,7 +8,7 @@ An option analysis program.
 
 """
 
-
+from bisect import bisect_left
 from decimal import *
 import PySimpleGUI as sg
 from datetime import date
@@ -16,8 +16,27 @@ from wallstreet import Stock, Call, Put
 
 
 
-sg.ChangeLookAndFeel('BlueMono') # 'BluePurple', 'DarkAmber','GreenTan'
+# Start of support code
+# From: https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value
+def take_closest(myList, myNumber):
+    """
+    Assumes myList is sorted. Returns closest value to myNumber.
 
+    If two numbers are equally close, return the smallest number.
+    """
+    pos = bisect_left(myList, myNumber)
+    if pos == 0 or pos == len(myList):
+        return pos
+    before = myList[pos - 1]
+    after = myList[pos]
+    if after - myNumber < myNumber - before:
+       return pos - 1
+    else:
+       return pos
+
+
+# Start of GUI code
+sg.ChangeLookAndFeel('BlueMono') # 'BluePurple', 'DarkAmber','GreenTan'
 
 size_1 = (10,1)
 font_h14 = "Helvetica 14"
@@ -62,7 +81,6 @@ layout = [
     [sg.Text('Symbol\t', font=font_h14), sg.Input('AAPL', size=(10, 1), key='__symbol',tooltip='Enter the underlying stock symbol', font=font_h14),      
         sg.Checkbox('Get option chain', key='__chain', default=True, font=font_h14),
         sg.Radio('Calls', "CALL", key='__is_call', default=True, size=(5,1), font=font_h14), sg.Radio('Puts', "CALL", font=font_h14)],
-    #[sg.Radio(text, 1) for text in ('Call','Put')],
     [sg.Text('Price\t', font=font_h14), sg.Input(key='__price', size=(10, 1), font=font_h14),
         sg.Text('Expires\t', font=font_h14), sg.Input(key='__expdate', size=(10, 1), font=font_h14), sg.CalendarButton('Set date',target=(2,3),format='%Y-%m-%d', font=font_h14)],
     [sg.Text('_'  * 80, font=font_h14)],      
@@ -70,8 +88,6 @@ layout = [
         sg.Text('Target 2\t', font=font_h14), sg.Input(key='__target2', size=(10, 1), font=font_h14)],
     [sg.Text('Strike #1\t', font=font_h14), sg.Input(key='__strike_price', size=(10, 1), font=font_h14),
         sg.Text('Strike inc\t', font=font_h14), sg.Input(key='__strike_price_inc', size=(10, 1), font=font_h14)],
-    #[sg.Text('Put strike\t'), sg.Input(key='__put_strike', size=(10, 1)),
-    #    sg.Text('Put decrement\t'), sg.Input(key='__put_strike_dec', size=(10, 1))],
     [sg.Text(' '  * 80, font=font_h14)],
     [sg.Column(column, background_color='darkblue')], #'#d3dfda')],      
     [sg.Text(' '  * 80, font=font_h14)],
@@ -82,17 +98,13 @@ layout = [
 ]
 
 
-# TODO: Calculate for Puts
-def get_strikes(price, strikes):
-    start = 0
-    numoptions = 6
-    for i, strike in enumerate(strikes):
-        eps = Decimal(strike) - price
-        if eps > 0:
-            start = i
-            break
-    end = start + numoptions
-    return strikes[start:end]
+def get_strikes(strike1, price, striks, is_call=True, num_options=6):
+    strikes = list(striks) 
+    if not is_call:
+        strikes.reverse()
+    cmpval = price if strike1 == 0 else strike1
+    idx = take_closest(strikes, float(cmpval))
+    return strikes[idx:idx+num_options]
 
 
 window = sg.Window('AppVizo Options Analysis', default_element_size=(40, 1)).Layout(layout)
@@ -100,7 +112,7 @@ window = sg.Window('AppVizo Options Analysis', default_element_size=(40, 1)).Lay
 while True:
     event, values = window.read() 
     print(event, values)       
-    numoptions = 6
+    num_options = 6  # WARNING: Hard-coded limiter - 6 options
     if event in (None, 'Exit'):      
         # Confirm exit here if desired.
         break      
@@ -112,7 +124,7 @@ while True:
         expdate = None if values['__expdate'] == '' else date.fromisoformat(values['__expdate'])
         target1 = 0 if values['__target1'] == '' else Decimal(values['__target1'])
         target2 = 0 if values['__target2'] == '' else Decimal(values['__target2'])
-        strike = 0 if values['__strike_price'] == '' else Decimal(values['__strike_price'])
+        strike1 = 0 if values['__strike_price'] == '' else Decimal(values['__strike_price'])
         strike_inc = 0 if values['__strike_price_inc'] == '' else Decimal(values['__strike_price_inc'])
         if not is_call:
             strike_inc *= -1
@@ -124,11 +136,14 @@ while True:
             o = None # This is our option object.
             if is_call:
                 o = Call(symbol, d=expdate.day, m=expdate.month, y=expdate.year)
+                print("CALLS")
             else:
                 o = Put(symbol, d=expdate.day, m=expdate.month, y=expdate.year)
+                print("PUTS")
             if len(o.strikes) > 0:
-                strikes = get_strikes(price, o.strikes)
-                for i,strik in enumerate(strikes[0:numoptions]):     # WARNING: Hard-coded limiter - 6 options
+                print("Strikes", o.strikes)
+                strikes = get_strikes(strike1, price, o.strikes, is_call, num_options)
+                for i,strik in enumerate(strikes):
                     strike = Decimal(strik)
                     o.set_strike(strike)
                     row = f'r{i+1}'
@@ -144,7 +159,7 @@ while True:
                         window[row+'c6'].update(f'{pctgain:.2f}%')
     else:
         # Recalc values
-        for i in range(numoptions):
+        for i in range(num_options):
             row = f'r{i+1}'
             strike = Decimal(values[row+'c1'])
             price = Decimal(values[row+'c2'])
