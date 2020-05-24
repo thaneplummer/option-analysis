@@ -12,6 +12,7 @@ PySimpleGUI reference: https://pysimplegui.readthedocs.io/en/latest/
 from bisect import bisect_left
 from decimal import *
 import PySimpleGUI as sg
+import requests
 from datetime import date
 from wallstreet import Stock, Call, Put
 
@@ -87,7 +88,7 @@ column = [targets,
 layout = [      
     [sg.Text('Option Analyser', size=(30, 1), font=("Helvetica", 25))],      
     [sg.Text('Symbol\t', font=font_h14), sg.Input('AAPL', size=(10, 1), key='__symbol',tooltip='Enter the underlying stock symbol', font=font_h14),      
-        sg.Checkbox('Get option chain', key='__chain', default=True, font=font_h14),
+        #sg.Checkbox('Get option chain', key='__chain', default=True, font=font_h14),
         sg.Radio('Calls', "CALL", key='__is_call', default=True, size=(5,1), font=font_h14), sg.Radio('Puts', "CALL", font=font_h14)],
     [sg.Text('Price\t', font=font_h14), sg.Input(key='__price', size=(10, 1), font=font_h14),
         sg.Text('Expires\t', font=font_h14), sg.Input(key='__expdate', size=(10, 1), font=font_h14), sg.CalendarButton('Set date',target=(2,3),format='%Y-%m-%d', font=font_h14)],
@@ -140,12 +141,17 @@ while True:
         #strike_inc = 0 if values['__strike_price_inc'] == '' else Decimal(values['__strike_price_inc'])
         #if not is_call:
          #   strike_inc *= -1
+        errors = False
         if symbol is not None and len(symbol) > 0:
-            s = Stock(symbol)
-            window['__price'].update(s.price)
+            try:
+                s = Stock(symbol)
+                window['__price'].update(s.price)
+            except requests.exceptions.ConnectionError as ConnectionError:
+                window['__price'].update("ERROR")
+                errors = True
         # Get strikes and populate.
         # TODO: Wait for the price to update
-        if expdate is not None:
+        if expdate is not None and not errors:
             o = None # This is our option object.
             if is_call:
                 o = Call(symbol, d=expdate.day, m=expdate.month, y=expdate.year)
