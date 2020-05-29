@@ -81,6 +81,8 @@ column = [targets,
         [textElement('r4c1'), textElement('r4c2'), textElement('r4c3'), textElement('r4c4'), textElement('r4c5'), textElement('r4c6')],
         [textElement('r5c1'), textElement('r5c2'), textElement('r5c3'), textElement('r5c4'), textElement('r5c5'), textElement('r5c6')],
         [textElement('r6c1'), textElement('r6c2'), textElement('r6c3'), textElement('r6c4'), textElement('r6c5'), textElement('r6c6')],
+        [textElement('r7c1'), textElement('r7c2'), textElement('r7c3'), textElement('r7c4'), textElement('r7c5'), textElement('r7c6')],
+        [textElement('r8c1'), textElement('r8c2'), textElement('r8c3'), textElement('r8c4'), textElement('r8c5'), textElement('r8c6')],
         [sg.Text('_' * 80, background_color='darkblue')]
 ]
 
@@ -89,7 +91,7 @@ layout = [
     [sg.Text('Option Analyser', size=(30, 1), font=("Helvetica", 25))],      
     [sg.Text('Symbol\t', font=font_h14), sg.Input('AAPL', size=(10, 1), key='__symbol',tooltip='Enter the underlying stock symbol', font=font_h14),      
         #sg.Checkbox('Get option chain', key='__chain', default=True, font=font_h14),
-        sg.Radio('Calls', "CALL", key='__is_call', default=True, size=(5,1), font=font_h14), sg.Radio('Puts', "CALL", font=font_h14)],
+        sg.Radio('CALLS', "CALL", key='__is_call', default=True, size=(7,1), font=font_h14, text_color='white', background_color='green'), sg.Radio('PUTS', "CALL", key='__put', font=font_h14)],
     [sg.Text('Price\t', font=font_h14), sg.Input(key='__price', size=(10, 1), font=font_h14),
         sg.Text('Expires\t', font=font_h14), sg.Input(key='__expdate', size=(10, 1), font=font_h14), sg.CalendarButton('Set date',target=(2,3),format='%Y-%m-%d', font=font_h14)],
     [sg.Text('_'  * 80, font=font_h14)],      
@@ -107,7 +109,7 @@ layout = [
 ]
 
 
-def get_strikes(price, striks, is_call=True, num_options=6):
+def get_strikes(price, striks, is_call=True, num_options=8):
     strikes = list(striks) 
     print('get_strikes')
     print(price, is_call, strikes)
@@ -117,23 +119,35 @@ def get_strikes(price, striks, is_call=True, num_options=6):
         # PUTS
         strikes.reverse()
         idx = len(strikes) - idx
+    # Need to get at least 2 in-the-money calls
+    idx = (idx - 2) if idx > 2 else 0
     return strikes[idx:idx+num_options]
 
+def enhance_option_ui(is_call):
+    # Eye candy
+    if is_call:
+        window['__put'].Widget.configure(background='lightgray', foreground='gray', font=font_h14)
+        window['__is_call'].Widget.configure(background='green', foreground='white', font=font_h14b)
+    else:
+        window['__put'].Widget.configure(background='red', foreground='white', font=font_h14b)
+        window['__is_call'].Widget.configure(background='lightgray', foreground='gray', font=font_h14)
 
+is_call = True  # Startup default
 window = sg.Window('AppVizo Options Analysis', default_element_size=(40, 1)).Layout(layout)
 # Event loop
 while True:
     event, values = window.read() 
     print(event, values)       
-    num_options = 6  # WARNING: Hard-coded limiter - 6 options
+    num_options = 8  # WARNING: Hard-coded limiter - 6 options
     if event in (None, 'Exit'):      
         # Confirm exit here if desired.
         break      
     elif event == 'Lookup':
+        is_call = values['__is_call']
+        enhance_option_ui(is_call)
         #sg.Popup(event, values)        # Debug
         symbol = values['__symbol']
         price = 0 if values['__price'] == '' else Decimal(values['__price'])
-        is_call = values['__is_call']
         expdate = None if values['__expdate'] == '' else date.fromisoformat(values['__expdate'])
         target1 = 0 if values['__target1'] == '' else Decimal(values['__target1'])
         target2 = 0 if values['__target2'] == '' else Decimal(values['__target2'])
@@ -184,6 +198,8 @@ while True:
                         pctgain = gain * 100 / price
                         window[row+'c6'].update(f'{pctgain:.2f}%')
     else:
+        is_call = values['__is_call']
+        enhance_option_ui(is_call)
         # Recalc values
         target1 = 0 if values['__target1'] == '' else Decimal(values['__target1'])
         target2 = 0 if values['__target2'] == '' else Decimal(values['__target2'])
@@ -191,6 +207,7 @@ while True:
             row = f'r{i+1}'
             strike = Decimal(values[row+'c1'])
             price = Decimal(values[row+'c2'])
+            price = 1 if price == 0 else price  # Avoid division by zero
             if target1 > 0:
                 gain = strike - target1 - price
                 if is_call:
